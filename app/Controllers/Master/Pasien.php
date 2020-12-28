@@ -171,4 +171,18 @@ class Pasien extends BaseController
 
         return redirect()->to('/pasien/index');
     }
+
+    public function detail()
+    {
+        if ($this->request->isAJAX()) {
+            $nopasien = $this->request->getVar('nopasien');
+            $data = [
+                'row' => $this->pasien->find($nopasien)
+            ];
+            $msg = [
+                'data' => view('pasien/detaildata', $data)
+            ];
+            echo json_encode($msg);
+        }
+    }
 }

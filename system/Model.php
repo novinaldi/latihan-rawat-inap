@@ -343,12 +343,9 @@ class Model
 	 */
 	public function __construct(ConnectionInterface &$db = null, ValidationInterface $validation = null)
 	{
-		if ($db instanceof ConnectionInterface)
-		{
-			$this->db = & $db;
-		}
-		else
-		{
+		if ($db instanceof ConnectionInterface) {
+			$this->db = &$db;
+		} else {
 			$this->db = Database::connect($this->DBGroup);
 		}
 
@@ -356,8 +353,7 @@ class Model
 		$this->tempUseSoftDeletes = $this->useSoftDeletes;
 		$this->tempAllowCallbacks = $this->allowCallbacks;
 
-		if (is_null($validation))
-		{
+		if (is_null($validation)) {
 			$validation = \Config\Services::validation(null, false);
 		}
 
@@ -381,26 +377,20 @@ class Model
 	{
 		$builder = $this->builder();
 
-		if ($this->tempUseSoftDeletes === true)
-		{
+		if ($this->tempUseSoftDeletes === true) {
 			$builder->where($this->table . '.' . $this->deletedField, null);
 		}
 
-		if (is_array($id))
-		{
+		if (is_array($id)) {
 			$row = $builder->whereIn($this->table . '.' . $this->primaryKey, $id)
-					->get();
+				->get();
 			$row = $row->getResult($this->tempReturnType);
-		}
-		elseif (is_numeric($id) || is_string($id))
-		{
+		} elseif (is_numeric($id) || is_string($id)) {
 			$row = $builder->where($this->table . '.' . $this->primaryKey, $id)
-					->get();
+				->get();
 
 			$row = $row->getFirstRow($this->tempReturnType);
-		}
-		else
-		{
+		} else {
 			$row = $builder->get();
 
 			$row = $row->getResult($this->tempReturnType);
@@ -426,16 +416,15 @@ class Model
 	 */
 	public function findColumn(string $columnName)
 	{
-		if (strpos($columnName, ',') !== false)
-		{
+		if (strpos($columnName, ',') !== false) {
 			throw DataException::forFindColumnHaveMultipleColumns();
 		}
 
 		$resultSet = $this->select($columnName)
-						  ->asArray()
-						  ->find();
+			->asArray()
+			->find();
 
-		return (! empty($resultSet)) ? array_column($resultSet, $columnName) : null;
+		return (!empty($resultSet)) ? array_column($resultSet, $columnName) : null;
 	}
 
 	//--------------------------------------------------------------------
@@ -453,13 +442,12 @@ class Model
 	{
 		$builder = $this->builder();
 
-		if ($this->tempUseSoftDeletes === true)
-		{
+		if ($this->tempUseSoftDeletes === true) {
 			$builder->where($this->table . '.' . $this->deletedField, null);
 		}
 
 		$row = $builder->limit($limit, $offset)
-				->get();
+			->get();
 
 		$row = $row->getResult($this->tempReturnType);
 
@@ -483,27 +471,22 @@ class Model
 	{
 		$builder = $this->builder();
 
-		if ($this->tempUseSoftDeletes === true)
-		{
+		if ($this->tempUseSoftDeletes === true) {
 			$builder->where($this->table . '.' . $this->deletedField, null);
-		}
-		else
-		{
-			if ($this->useSoftDeletes === true && empty($builder->QBGroupBy) && ! empty($this->primaryKey))
-			{
+		} else {
+			if ($this->useSoftDeletes === true && empty($builder->QBGroupBy) && !empty($this->primaryKey)) {
 				$builder->groupBy($this->table . '.' . $this->primaryKey);
 			}
 		}
 
 		// Some databases, like PostgreSQL, need order
 		// information to consistently return correct results.
-		if (! empty($builder->QBGroupBy) && empty($builder->QBOrderBy) && ! empty($this->primaryKey))
-		{
+		if (!empty($builder->QBGroupBy) && empty($builder->QBOrderBy) && !empty($this->primaryKey)) {
 			$builder->orderBy($this->table . '.' . $this->primaryKey, 'asc');
 		}
 
 		$row = $builder->limit(1, 0)
-					   ->get();
+			->get();
 
 		$row = $row->getFirstRow($this->tempReturnType);
 
@@ -556,29 +539,20 @@ class Model
 	 */
 	public function save($data): bool
 	{
-		if (empty($data))
-		{
+		if (empty($data)) {
 			return true;
 		}
 
-		if (is_object($data) && isset($data->{$this->primaryKey}))
-		{
+		if (is_object($data) && isset($data->{$this->primaryKey})) {
 			$response = $this->update($data->{$this->primaryKey}, $data);
-		}
-		elseif (is_array($data) && ! empty($data[$this->primaryKey]))
-		{
+		} elseif (is_array($data) && !empty($data[$this->primaryKey])) {
 			$response = $this->update($data[$this->primaryKey], $data);
-		}
-		else
-		{
+		} else {
 			$response = $this->insert($data, false);
 
-			if ($response instanceof BaseResult)
-			{
+			if ($response instanceof BaseResult) {
 				$response = $response->resultID !== false;
-			}
-			elseif ($response !== false)
-			{
+			} elseif ($response !== false) {
 				$response = true;
 			}
 		}
@@ -600,18 +574,14 @@ class Model
 	 */
 	public static function classToArray($data, $primaryKey = null, string $dateFormat = 'datetime', bool $onlyChanged = true): array
 	{
-		if (method_exists($data, 'toRawArray'))
-		{
+		if (method_exists($data, 'toRawArray')) {
 			$properties = $data->toRawArray($onlyChanged);
 
 			// Always grab the primary key otherwise updates will fail.
-			if (! empty($properties) && ! empty($primaryKey) && ! in_array($primaryKey, $properties) && ! empty($data->{$primaryKey}))
-			{
+			if (!empty($properties) && !empty($primaryKey) && !in_array($primaryKey, $properties) && !empty($data->{$primaryKey})) {
 				$properties[$primaryKey] = $data->{$primaryKey};
 			}
-		}
-		else
-		{
+		} else {
 			$mirror = new ReflectionClass($data);
 			$props  = $mirror->getProperties(ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED);
 
@@ -619,8 +589,7 @@ class Model
 
 			// Loop over each property,
 			// saving the name/value in a new array we can return.
-			foreach ($props as $prop)
-			{
+			foreach ($props as $prop) {
 				// Must make protected values accessible.
 				$prop->setAccessible(true);
 				$propName              = $prop->getName();
@@ -629,14 +598,10 @@ class Model
 		}
 
 		// Convert any Time instances to appropriate $dateFormat
-		if ($properties)
-		{
-			foreach ($properties as $key => $value)
-			{
-				if ($value instanceof Time)
-				{
-					switch ($dateFormat)
-					{
+		if ($properties) {
+			foreach ($properties as $key => $value) {
+				if ($value instanceof Time) {
+					switch ($dateFormat) {
 						case 'datetime':
 							$converted = $value->format('Y-m-d H:i:s');
 							break;
@@ -688,44 +653,37 @@ class Model
 
 		$this->insertID = 0;
 
-		if (empty($data))
-		{
+		if (empty($data)) {
 			$data           = $this->tempData['data'] ?? null;
 			$escape         = $this->tempData['escape'] ?? null;
 			$this->tempData = [];
 		}
 
-		if (empty($data))
-		{
+		if (empty($data)) {
 			throw DataException::forEmptyDataset('insert');
 		}
 
 		// If $data is using a custom class with public or protected
 		// properties representing the table elements, we need to grab
 		// them as an array.
-		if (is_object($data) && ! $data instanceof stdClass)
-		{
+		if (is_object($data) && !$data instanceof stdClass) {
 			$data = static::classToArray($data, $this->primaryKey, $this->dateFormat, false);
 		}
 
 		// If it's still a stdClass, go ahead and convert to
 		// an array so doProtectFields and other model methods
 		// don't have to do special checks.
-		if (is_object($data))
-		{
+		if (is_object($data)) {
 			$data = (array) $data;
 		}
 
-		if (empty($data))
-		{
+		if (empty($data)) {
 			throw DataException::forEmptyDataset('insert');
 		}
 
 		// Validate data before saving.
-		if ($this->skipValidation === false)
-		{
-			if ($this->cleanRules()->validate($data) === false)
-			{
+		if ($this->skipValidation === false) {
+			if ($this->cleanRules()->validate($data) === false) {
 				return false;
 			}
 		}
@@ -737,13 +695,11 @@ class Model
 		// Set created_at and updated_at with same time
 		$date = $this->setDate();
 
-		if ($this->useTimestamps && ! empty($this->createdField) && ! array_key_exists($this->createdField, $data))
-		{
+		if ($this->useTimestamps && !empty($this->createdField) && !array_key_exists($this->createdField, $data)) {
 			$data[$this->createdField] = $date;
 		}
 
-		if ($this->useTimestamps && ! empty($this->updatedField) && ! array_key_exists($this->updatedField, $data))
-		{
+		if ($this->useTimestamps && !empty($this->updatedField) && !array_key_exists($this->updatedField, $data)) {
 			$data[$this->updatedField] = $date;
 		}
 
@@ -751,12 +707,11 @@ class Model
 
 		// Must use the set() method to ensure objects get converted to arrays
 		$result = $this->builder()
-				->set($eventData['data'], '', $escape)
-				->insert();
+			->set($eventData['data'], '', $escape)
+			->insert();
 
 		// If insertion succeeded then save the insert ID
-		if ($result->resultID)
-		{
+		if ($result->resultID) {
 			$this->insertID = $this->db->insertID();
 		}
 
@@ -764,8 +719,7 @@ class Model
 		$this->trigger('afterInsert', ['id' => $this->insertID, 'data' => $eventData['data'], 'result' => $result]);
 
 		// If insertion failed, get out of here
-		if (! $result)
-		{
+		if (!$result) {
 			return $result;
 		}
 
@@ -787,12 +741,9 @@ class Model
 	 */
 	public function insertBatch(array $set = null, bool $escape = null, int $batchSize = 100, bool $testing = false)
 	{
-		if (is_array($set) && $this->skipValidation === false)
-		{
-			foreach ($set as $row)
-			{
-				if ($this->cleanRules()->validate($row) === false)
-				{
+		if (is_array($set) && $this->skipValidation === false) {
+			foreach ($set as $row) {
+				if ($this->cleanRules()->validate($row) === false) {
 					return false;
 				}
 			}
@@ -817,50 +768,42 @@ class Model
 	{
 		$escape = null;
 
-		if (is_numeric($id) || is_string($id))
-		{
+		if (is_numeric($id) || is_string($id)) {
 			$id = [$id];
 		}
 
-		if (empty($data))
-		{
+		if (empty($data)) {
 			$data           = $this->tempData['data'] ?? null;
 			$escape         = $this->tempData['escape'] ?? null;
 			$this->tempData = [];
 		}
 
-		if (empty($data))
-		{
+		if (empty($data)) {
 			throw DataException::forEmptyDataset('update');
 		}
 
 		// If $data is using a custom class with public or protected
 		// properties representing the table elements, we need to grab
 		// them as an array.
-		if (is_object($data) && ! $data instanceof stdClass)
-		{
+		if (is_object($data) && !$data instanceof stdClass) {
 			$data = static::classToArray($data, $this->primaryKey, $this->dateFormat);
 		}
 
 		// If it's still a stdClass, go ahead and convert to
 		// an array so doProtectFields and other model methods
 		// don't have to do special checks.
-		if (is_object($data))
-		{
+		if (is_object($data)) {
 			$data = (array) $data;
 		}
 
 		// If it's still empty here, means $data is no change or is empty object
-		if (empty($data))
-		{
+		if (empty($data)) {
 			throw DataException::forEmptyDataset('update');
 		}
 
 		// Validate data before saving.
-		if ($this->skipValidation === false)
-		{
-			if ($this->cleanRules(true)->validate($data) === false)
-			{
+		if ($this->skipValidation === false) {
+			if ($this->cleanRules(true)->validate($data) === false) {
 				return false;
 			}
 		}
@@ -869,8 +812,7 @@ class Model
 		// strip out updated_at values.
 		$data = $this->doProtectFields($data);
 
-		if ($this->useTimestamps && ! empty($this->updatedField) && ! array_key_exists($this->updatedField, $data))
-		{
+		if ($this->useTimestamps && !empty($this->updatedField) && !array_key_exists($this->updatedField, $data)) {
 			$data[$this->updatedField] = $this->setDate();
 		}
 
@@ -878,15 +820,14 @@ class Model
 
 		$builder = $this->builder();
 
-		if ($id)
-		{
+		if ($id) {
 			$builder = $builder->whereIn($this->table . '.' . $this->primaryKey, $id);
 		}
 
 		// Must use the set() method to ensure objects get converted to arrays
 		$result = $builder
-				->set($eventData['data'], '', $escape)
-				->update();
+			->set($eventData['data'], '', $escape)
+			->update();
 
 		$this->trigger('afterUpdate', ['id' => $id, 'data' => $eventData['data'], 'result' => $result]);
 
@@ -910,12 +851,9 @@ class Model
 	 */
 	public function updateBatch(array $set = null, string $index = null, int $batchSize = 100, bool $returnSQL = false)
 	{
-		if (is_array($set) && $this->skipValidation === false)
-		{
-			foreach ($set as $row)
-			{
-				if ($this->cleanRules(true)->validate($row) === false)
-				{
+		if (is_array($set) && $this->skipValidation === false) {
+			foreach ($set as $row) {
+				if ($this->cleanRules(true)->validate($row) === false) {
 					return false;
 				}
 			}
@@ -938,25 +876,20 @@ class Model
 	 */
 	public function delete($id = null, bool $purge = false)
 	{
-		if (! empty($id) && (is_numeric($id) || is_string($id)))
-		{
+		if (!empty($id) && (is_numeric($id) || is_string($id))) {
 			$id = [$id];
 		}
 
 		$builder = $this->builder();
-		if (! empty($id))
-		{
+		if (!empty($id)) {
 			$builder = $builder->whereIn($this->primaryKey, $id);
 		}
 
 		$this->trigger('beforeDelete', ['id' => $id, 'purge' => $purge]);
 
-		if ($this->useSoftDeletes && ! $purge)
-		{
-			if (empty($builder->getCompiledQBWhere()))
-			{
-				if (CI_DEBUG)
-				{
+		if ($this->useSoftDeletes && !$purge) {
+			if (empty($builder->getCompiledQBWhere())) {
+				if (CI_DEBUG) {
 					throw new DatabaseException('Deletes are not allowed unless they contain a "where" or "like" clause.');
 				}
 				// @codeCoverageIgnoreStart
@@ -965,15 +898,12 @@ class Model
 			}
 			$set[$this->deletedField] = $this->setDate();
 
-			if ($this->useTimestamps && ! empty($this->updatedField))
-			{
+			if ($this->useTimestamps && !empty($this->updatedField)) {
 				$set[$this->updatedField] = $this->setDate();
 			}
 
 			$result = $builder->update($set);
-		}
-		else
-		{
+		} else {
 			$result = $builder->delete();
 		}
 
@@ -992,14 +922,13 @@ class Model
 	 */
 	public function purgeDeleted()
 	{
-		if (! $this->useSoftDeletes)
-		{
+		if (!$this->useSoftDeletes) {
 			return true;
 		}
 
 		return $this->builder()
-				->where($this->table . '.' . $this->deletedField . ' IS NOT NULL')
-				->delete();
+			->where($this->table . '.' . $this->deletedField . ' IS NOT NULL')
+			->delete();
 	}
 
 	//--------------------------------------------------------------------
@@ -1014,7 +943,7 @@ class Model
 	 */
 	public function withDeleted($val = true)
 	{
-		$this->tempUseSoftDeletes = ! $val;
+		$this->tempUseSoftDeletes = !$val;
 
 		return $this;
 	}
@@ -1032,7 +961,7 @@ class Model
 		$this->tempUseSoftDeletes = false;
 
 		$this->builder()
-			 ->where($this->table . '.' . $this->deletedField . ' IS NOT NULL');
+			->where($this->table . '.' . $this->deletedField . ' IS NOT NULL');
 
 		return $this;
 	}
@@ -1052,10 +981,8 @@ class Model
 	public function replace($data = null, bool $returnSQL = false)
 	{
 		// Validate data before saving.
-		if (! empty($data) && $this->skipValidation === false)
-		{
-			if ($this->cleanRules(true)->validate($data) === false)
-			{
+		if (!empty($data) && $this->skipValidation === false) {
+			if ($this->cleanRules(true)->validate($data) === false) {
 				return false;
 			}
 		}
@@ -1113,18 +1040,16 @@ class Model
 	public function chunk(int $size, Closure $userFunc)
 	{
 		$total = $this->builder()
-				->countAllResults(false);
+			->countAllResults(false);
 
 		$offset = 0;
 
-		while ($offset <= $total)
-		{
-			$builder = clone($this->builder());
+		while ($offset <= $total) {
+			$builder = clone ($this->builder());
 
 			$rows = $builder->get($size, $offset);
 
-			if ($rows === false)
-			{
+			if ($rows === false) {
 				throw DataException::forEmptyDataset('chunk');
 			}
 
@@ -1132,15 +1057,12 @@ class Model
 
 			$offset += $size;
 
-			if (empty($rows))
-			{
+			if (empty($rows)) {
 				continue;
 			}
 
-			foreach ($rows as $row)
-			{
-				if ($userFunc($row) === false)
-				{
+			foreach ($rows as $row) {
+				if ($userFunc($row) === false) {
 					return;
 				}
 			}
@@ -1166,8 +1088,7 @@ class Model
 	{
 		$pager = \Config\Services::pager(null, null, false);
 
-		if ($segment)
-		{
+		if ($segment) {
 			$pager->setSegment($segment);
 		}
 
@@ -1213,24 +1134,21 @@ class Model
 	 */
 	protected function builder(string $table = null)
 	{
-		if ($this->builder instanceof BaseBuilder)
-		{
+		if ($this->builder instanceof BaseBuilder) {
 			return $this->builder;
 		}
 
 		// We're going to force a primary key to exist
 		// so we don't have overly convoluted code,
 		// and future features are likely to require them.
-		if (empty($this->primaryKey))
-		{
+		if (empty($this->primaryKey)) {
 			throw ModelException::forNoPrimaryKey(get_class($this));
 		}
 
 		$table = empty($table) ? $this->table : $table;
 
 		// Ensure we have a good db connection
-		if (! $this->db instanceof BaseConnection)
-		{
+		if (!$this->db instanceof BaseConnection) {
 			$this->db = Database::connect($this->DBGroup);
 		}
 
@@ -1255,22 +1173,17 @@ class Model
 	 */
 	protected function doProtectFields(array $data): array
 	{
-		if ($this->protectFields === false)
-		{
+		if ($this->protectFields === false) {
 			return $data;
 		}
 
-		if (empty($this->allowedFields))
-		{
+		if (empty($this->allowedFields)) {
 			throw DataException::forInvalidAllowedFields(get_class($this));
 		}
 
-		if (is_array($data) && count($data))
-		{
-			foreach ($data as $key => $val)
-			{
-				if (! in_array($key, $this->allowedFields))
-				{
+		if (is_array($data) && count($data)) {
+			foreach ($data as $key => $val) {
+				if (!in_array($key, $this->allowedFields)) {
 					unset($data[$key]);
 				}
 			}
@@ -1301,8 +1214,7 @@ class Model
 	{
 		$currentDate = is_numeric($userData) ? (int) $userData : time();
 
-		switch ($this->dateFormat)
-		{
+		switch ($this->dateFormat) {
 			case 'int':
 				return $currentDate;
 			case 'datetime':
@@ -1344,12 +1256,10 @@ class Model
 	public function errors(bool $forceDB = false)
 	{
 		// Do we have validation errors?
-		if ($forceDB === false && $this->skipValidation === false)
-		{
+		if ($forceDB === false && $this->skipValidation === false) {
 			$errors = $this->validation->getErrors();
 
-			if (! empty($errors))
-			{
+			if (!empty($errors)) {
 				return $errors;
 			}
 		}
@@ -1471,22 +1381,19 @@ class Model
 	{
 		$rules = $this->getValidationRules();
 
-		if ($this->skipValidation === true || empty($rules) || empty($data))
-		{
+		if ($this->skipValidation === true || empty($rules) || empty($data)) {
 			return true;
 		}
 
 		// Query Builder works with objects as well as arrays,
 		// but validation requires array, so cast away.
-		if (is_object($data))
-		{
+		if (is_object($data)) {
 			$data = (array) $data;
 		}
 
 		// ValidationRules can be either a string, which is the group name,
 		// or an array of rules.
-		if (is_string($rules))
-		{
+		if (is_string($rules)) {
 			$rules = $this->validation->loadRuleGroup($rules);
 		}
 
@@ -1496,8 +1403,7 @@ class Model
 
 		// If no data existed that needs validation
 		// our job is done here.
-		if (empty($rules))
-		{
+		if (empty($rules)) {
 			return true;
 		}
 
@@ -1522,15 +1428,12 @@ class Model
 	 */
 	protected function cleanValidationRules(array $rules, array $data = null): array
 	{
-		if (empty($data))
-		{
+		if (empty($data)) {
 			return [];
 		}
 
-		foreach ($rules as $field => $rule)
-		{
-			if (! array_key_exists($field, $data))
-			{
+		foreach ($rules as $field => $rule) {
+			if (!array_key_exists($field, $data)) {
 				unset($rules[$field]);
 			}
 		}
@@ -1566,23 +1469,17 @@ class Model
 	{
 		$replacements = [];
 
-		foreach ($data as $key => $value)
-		{
+		foreach ($data as $key => $value) {
 			$replacements["{{$key}}"] = $value;
 		}
 
-		if (! empty($replacements))
-		{
-			foreach ($rules as &$rule)
-			{
-				if (is_array($rule))
-				{
-					foreach ($rule as &$row)
-					{
+		if (!empty($replacements)) {
+			foreach ($rules as &$rule) {
+				if (is_array($rule)) {
+					foreach ($rule as &$row) {
 						// Should only be an `errors` array
 						// which doesn't take placeholders.
-						if (is_array($row))
-						{
+						if (is_array($row)) {
 							continue;
 						}
 
@@ -1614,17 +1511,13 @@ class Model
 
 		// ValidationRules can be either a string, which is the group name,
 		// or an array of rules.
-		if (is_string($rules))
-		{
+		if (is_string($rules)) {
 			$rules = $this->validation->loadRuleGroup($rules);
 		}
 
-		if (isset($options['except']))
-		{
+		if (isset($options['except'])) {
 			$rules = array_diff_key($rules, array_flip($options['except']));
-		}
-		elseif (isset($options['only']))
-		{
+		} elseif (isset($options['only'])) {
 			$rules = array_intersect_key($rules, array_flip($options['only']));
 		}
 
@@ -1656,8 +1549,7 @@ class Model
 	 */
 	public function countAllResults(bool $reset = true, bool $test = false)
 	{
-		if ($this->tempUseSoftDeletes === true)
-		{
+		if ($this->tempUseSoftDeletes === true) {
 			$this->builder()->where($this->table . '.' . $this->deletedField, null);
 		}
 
@@ -1714,21 +1606,17 @@ class Model
 		$allowed                  = $this->tempAllowCallbacks;
 		$this->tempAllowCallbacks = $this->allowCallbacks;
 
-		if (! $allowed)
-		{
+		if (!$allowed) {
 			return $eventData;
 		}
 
 		// Ensure it's a valid event
-		if (! isset($this->{$event}) || empty($this->{$event}))
-		{
+		if (!isset($this->{$event}) || empty($this->{$event})) {
 			return $eventData;
 		}
 
-		foreach ($this->{$event} as $callback)
-		{
-			if (! method_exists($this, $callback))
-			{
+		foreach ($this->{$event} as $callback) {
+			if (!method_exists($this, $callback)) {
 				throw DataException::forInvalidMethodTriggered($callback);
 			}
 
@@ -1753,16 +1641,11 @@ class Model
 	 */
 	public function __get(string $name)
 	{
-		if (property_exists($this, $name))
-		{
+		if (property_exists($this, $name)) {
 			return $this->{$name};
-		}
-		elseif (isset($this->db->$name))
-		{
+		} elseif (isset($this->db->$name)) {
 			return $this->db->$name;
-		}
-		elseif (isset($this->builder()->$name))
-		{
+		} elseif (isset($this->builder()->$name)) {
 			return $this->builder()->$name;
 		}
 
@@ -1778,16 +1661,11 @@ class Model
 	 */
 	public function __isset(string $name): bool
 	{
-		if (property_exists($this, $name))
-		{
+		if (property_exists($this, $name)) {
 			return true;
-		}
-		elseif (isset($this->db->$name))
-		{
+		} elseif (isset($this->db->$name)) {
 			return true;
-		}
-		elseif (isset($this->builder()->$name))
-		{
+		} elseif (isset($this->builder()->$name)) {
 			return true;
 		}
 
@@ -1809,29 +1687,23 @@ class Model
 	{
 		$result = null;
 
-		if (method_exists($this->db, $name))
-		{
+		if (method_exists($this->db, $name)) {
 			$result = $this->db->$name(...$params);
-		}
-		elseif (method_exists($builder = $this->builder(), $name))
-		{
+		} elseif (method_exists($builder = $this->builder(), $name)) {
 			$result = $builder->$name(...$params);
 		}
 
 		// Don't return the builder object unless specifically requested
 		//, since that will interrupt the usability flow
 		// and break intermingling of model and builder methods.
-		if ($name !== 'builder' && empty($result))
-		{
-			if (! method_exists($this->builder(), $name))
-			{
+		if ($name !== 'builder' && empty($result)) {
+			if (!method_exists($this->builder(), $name)) {
 				$className = get_class($this);
 				throw new \BadMethodCallException("Call to undefined method $className::$name");
 			}
 			return $result;
 		}
-		if ($name !== 'builder' && ! $result instanceof BaseBuilder)
-		{
+		if ($name !== 'builder' && !$result instanceof BaseBuilder) {
 			return $result;
 		}
 

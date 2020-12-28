@@ -41,11 +41,25 @@ $routes->delete('/anggota/hapus/(:any)', 'Anggota::hapus/$1');
 // Routes Pasien
 $routes->get('/pasien/(:any)', 'Master\Pasien::$1');
 $routes->get('/pasien/index', 'Master\Pasien::index');
+$routes->post('/pasien/index', 'Master\Pasien::index');
 $routes->get('/pasien', 'Master\Pasien::index');
 $routes->get('/pasien/hapus/(:any)', 'Master\Pasien::index');
 $routes->delete('/pasien/hapus/(:any)', 'Master\Pasien::hapus/$1');
 $routes->post('/pasien/simpan', 'Master\Pasien::simpan');
 $routes->post('/pasien/update', 'Master\Pasien::update');
+
+$routes->group('penyakit', function ($routes) {
+	$routes->get('/', 'Master\Penyakit::index');
+	$routes->get('index', 'Master\Penyakit::index');
+	$routes->post('index', 'Master\Penyakit::index');
+	$routes->delete('hapus/(:any)', 'Master\Penyakit::hapus/$1');
+});
+$routes->group('kamar', function ($routes) {
+	$routes->get('/', 'Master\Kamar::index');
+	$routes->get('index', 'Master\Kamar::index');
+	$routes->post('index', 'Master\Kamar::index');
+	$routes->delete('hapus/(:any)', 'Master\Kamar::hapus/$1');
+});
 /**
  * --------------------------------------------------------------------
  * Additional Routing

@@ -132,6 +132,25 @@ $uri = service('uri');
                                 </p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a href="<?= site_url('penyakit/index') ?>"
+                                class="nav-link <?= ($uri->getSegment(1) == 'penyakit') ? 'active' : ''; ?>">
+                                <i class="nav-icon fas fa-tasks"></i>
+                                <p>
+                                    Penyakit
+                                </p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="<?= site_url('kamar/index') ?>"
+                                class="nav-link <?= ($uri->getSegment(1) == 'kamar') ? 'active' : ''; ?>">
+                                <i class="nav-icon fas fa-hospital"></i>
+                                <p>
+                                    Kamar
+                                </p>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
                 <!-- /.sidebar-menu -->

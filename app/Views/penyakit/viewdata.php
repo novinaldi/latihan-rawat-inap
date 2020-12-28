@@ -1,7 +1,7 @@
 <?= $this->extend('layout/main') ?>
 
 <?= $this->section('title'); ?>
-Manajamen Data Pasien
+Manajamen Data Penyakit
 <?= $this->endSection(); ?>
 
 <?= $this->section('content'); ?>
@@ -9,7 +9,7 @@ Manajamen Data Pasien
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">
-            <button type="button" onclick="window.location='/pasien/tambah'" class="btn btn-sm btn-primary">
+            <button type="button" class="btn btn-sm btn-primary tomboltambah">
                 Tambah Data
             </button>
 
@@ -27,10 +27,10 @@ Manajamen Data Pasien
     <div class="card-body">
         <div class="row justify-content-center">
             <div class="col-lg-6">
-                <form action="/pasien/index" method="post">
+                <form action="/penyakit/index" method="post">
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control" placeholder="Cari Nomor / Nama Pasien" name="cari"
-                            autofocus value="<?= session()->get('caripasien') ?>">
+                        <input type="text" class="form-control" placeholder="Cari Nama Penyakit" name="cari" autofocus
+                            value="<?= session()->get('caripenyakit') ?>">
                         <div class="input-group-append">
                             <button class="btn btn-primary" type="submit" name="tombolcari">
                                 <i class="fa fa-search"></i>
@@ -40,13 +40,12 @@ Manajamen Data Pasien
                 </form>
             </div>
         </div>
+        <?= session()->getFlashdata('pesan'); ?>
         <table class="table table-sm table-striped table-bordered">
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>No.Pasien</th>
-                    <th>Nama</th>
-                    <th>Jenkel</th>
+                    <th style="width: 5%;">No</th>
+                    <th>Nama Penyakit</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -55,34 +54,21 @@ Manajamen Data Pasien
 
                 <?php
                 $nomor = 0 + (($nohalaman - 1) * 10);
-                foreach ($datapasien as $row) :
+                foreach ($datapenyakit as $row) :
                     $nomor++;
                 ?>
 
                 <tr>
                     <td><?= $nomor; ?></td>
-                    <td><?= $row['pasienno']; ?></td>
-                    <td><?= $row['pasiennama']; ?></td>
-                    <td><?= $row['pasienjk']; ?></td>
+                    <td><?= $row['penyakitnm']; ?></td>
                     <td>
-                        <form action="/pasien/hapus/<?= $row['pasienno'] ?>" method="post" style="display:inline;"
+                        <form action="/penyakit/hapus/<?= $row['penyakitid'] ?>" method="post" style="display:inline;"
                             class="formhapus">
                             <input type="hidden" name="_method" value="DELETE" />
                             <button type="submit" class="btn btn-sm btn-danger btnhapus">
                                 <i class="fa fa-trash-alt"></i>
                             </button>
                         </form>
-
-                        <button type="button"
-                            onclick="window.location='<?= site_url('pasien/edit/' . $row['pasienno']) ?>'"
-                            class="btn btn-sm btn-info">
-                            <i class="fa fa-tags"></i>
-                        </button>
-
-                        <button type="button" class="btn btn-sm btn-outline-warning"
-                            onclick="detail('<?= $row['pasienno'] ?>')">
-                            <i class="fa fa-tasks"></i>
-                        </button>
                     </td>
                 </tr>
 
@@ -90,18 +76,38 @@ Manajamen Data Pasien
             </tbody>
         </table><br>
         <div class="float-right">
-            <?= $pager->links('pasien', 'paging'); ?>
+            <?= $pager->links('penyakit', 'paging'); ?>
         </div>
     </div>
     <!-- /.card-body -->
     <!-- /.card-footer-->
 </div>
-<div class="viewmodaldetail" style="display: none;"></div>
+<div class="viewmodal" style="display: none;"></div>
 <script>
 $(document).ready(function() {
+    $('.tomboltambah').click(function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: "/master/penyakit/tambah",
+            dataType: "json",
+            success: function(response) {
+                if (response.data) {
+                    $('.viewmodal').html(response.data).show();
+                    $('#modaltambah').on('shown.bs.modal', function(e) {
+                        $('#namapenyakit').focus();
+                    });
+                    $('#modaltambah').modal('show');
+                }
+            },
+            error: function(xhr, ajaxOptions, thrownError) {
+                alert(xhr.status + "\n" + xhr.responseText + "\n" +
+                    thrownError);
+            }
+        });
+    });
     $('.formhapus').submit(function(e) {
         Swal.fire({
-            title: 'Hapus Data Pasien',
+            title: 'Hapus Data Penyakit',
             text: "Yakin data ini dihapus ?",
             icon: 'warning',
             showCancelButton: true,
@@ -124,27 +130,5 @@ $(document).ready(function() {
         return false;
     });
 });
-
-function detail(nopasien) {
-    $.ajax({
-        type: "post",
-        url: "<?= site_url('master/pasien/detail') ?>",
-        data: {
-            nopasien: nopasien
-        },
-        dataType: "json",
-        success: function(response) {
-            if (response.data) {
-                $('.viewmodaldetail').html(response.data).show();
-                $('#modaldetail').modal('show');
-            }
-        },
-        error: function(xhr, ajaxOptions, thrownError) {
-            alert(xhr.status + "\n" + xhr.responseText + "\n" +
-                thrownError);
-        }
-    });
-}
 </script>
-
 <?= $this->endSection(); ?>

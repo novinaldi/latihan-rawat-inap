@@ -17,6 +17,8 @@ namespace App\Controllers;
 
 use CodeIgniter\Controller;
 use App\Models\Modelpasien;
+use App\Models\Modelpenyakit;
+use App\Models\Modelkamar;
 
 class BaseController extends Controller
 {
@@ -46,5 +48,7 @@ class BaseController extends Controller
 
 		$this->namasaya = "Novinaldi";
 		$this->pasien = new Modelpasien();
+		$this->penyakit = new Modelpenyakit();
+		$this->kamar = new Modelkamar();
 	}
 }
